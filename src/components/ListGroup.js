@@ -28,6 +28,7 @@ const noop = () => {};
  */
 export default function ListGroup(props) {
   const {
+    element,
     id,
     items,
     label,
@@ -40,7 +41,10 @@ export default function ListGroup(props) {
   const [ newItemAdded, setNewItemAdded ] = useState(false);
 
   const prevItems = usePrevious(items);
+  const prevElement = usePrevious(element);
 
+  const elementChanged = element !== prevElement;
+  const shouldHandleEffects = !elementChanged && shouldSort;
 
   // keep ordering in sync to items and open changes
 
@@ -49,11 +53,18 @@ export default function ListGroup(props) {
     if (!prevItems || !shouldSort) {
       setOrdering(createOrdering(items));
     }
-  }, [ items ]);
+  }, [ items, element ]);
 
-  // (1) items were added
+  // (1) re initiate ordering when element changed
   useEffect(() => {
-    if (shouldSort && prevItems && items.length > prevItems.length) {
+    if (elementChanged) {
+      setOrdering(createOrdering(items));
+    }
+  }, [ element ]);
+
+  // (2) items were added
+  useEffect(() => {
+    if (shouldHandleEffects && prevItems && items.length > prevItems.length) {
 
       let add = [];
 
@@ -82,20 +93,20 @@ export default function ListGroup(props) {
     } else {
       setNewItemAdded(false);
     }
-  }, [ items, open ]);
+  }, [ items, open, shouldHandleEffects ]);
 
-  // (2) sort items on open
+  // (3) sort items on open
   useEffect(() => {
 
     // we already sorted as items were added
-    if (shouldSort && open && !newItemAdded) {
+    if (shouldHandleEffects && open && !newItemAdded) {
       setOrdering(createOrdering(sortItems(items)));
     }
-  }, [ open ]);
+  }, [ open, shouldHandleEffects ]);
 
-  // (3) items were deleted
+  // (4) items were deleted
   useEffect(() => {
-    if (shouldSort && prevItems && items.length < prevItems.length) {
+    if (shouldHandleEffects && prevItems && items.length < prevItems.length) {
       let keep = [];
 
       ordering.forEach(o => {
@@ -106,7 +117,7 @@ export default function ListGroup(props) {
 
       setOrdering(keep);
     }
-  }, [ items ]);
+  }, [ items, shouldHandleEffects ]);
 
   const toggleOpen = () => setOpen(!open);
 
