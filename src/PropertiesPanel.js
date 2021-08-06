@@ -78,6 +78,7 @@ export default function PropertiesPanel(props) {
 
   useEffect(() => {
     if (typeof layoutChanged === 'function') {
+      console.log('Layout: ', layout);
       layoutChanged(layout);
     }
   }, [ layout, layoutChanged ]);

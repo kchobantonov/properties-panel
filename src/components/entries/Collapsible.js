@@ -1,8 +1,14 @@
 import {
+  useContext,
+  useMemo,
   useState
 } from 'preact/hooks';
 
 import classnames from 'classnames';
+
+import {
+  LayoutContext
+} from '../../context';
 
 import {
   ListArrowIcon,
@@ -19,9 +25,26 @@ export default function CollapsibleEntry(props) {
     open: shouldOpen
   } = props;
 
-  const [ open, setOpen ] = useState(shouldOpen);
+  const {
+    layout,
+    setLayoutForKey
+  } = useContext(LayoutContext);
 
-  const toggleOpen = () => setOpen(!open);
+  const layoutKey = useMemo(() => {
+    return `collapsible-${id}`;
+  }, [ id ]);
+
+  const collapsibleLayout = layout[layoutKey] || {};
+
+  const [ open, setOpen ] = useState(shouldOpen || collapsibleLayout.open);
+
+  const toggleOpen = () => {
+    setOpen(!open);
+    setLayoutForKey(layoutKey, {
+      ...collapsibleLayout,
+      open: !open
+    });
+  };
 
   // todo(pinussilvestrus): translate once we have a translate mechanism for the core
   const placeholderLabel = '<empty>';
